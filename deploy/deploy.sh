@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 # Build and deploy the game server using Docker Compose on Linux.
 set -euo pipefail
 
