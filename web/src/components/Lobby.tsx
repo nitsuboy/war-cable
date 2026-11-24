@@ -20,7 +20,7 @@ export function Lobby({ queued, disabled, onCreate, onQuickMatch, onCancelQueue,
   const submit = (event: FormEvent) => {
     event.preventDefault();
     const trimmed = code.trim().toUpperCase();
-    if (trimmed.length === 6) {
+    if (!disabled && trimmed.length === 6) {
       onJoin(trimmed);
     }
   };
@@ -41,6 +41,12 @@ export function Lobby({ queued, disabled, onCreate, onQuickMatch, onCancelQueue,
       </header>
 
       <section className="panel lobby-actions">
+        {disabled && (
+          <p className="offline-note" role="status">
+            {t('lobby.offlineNotice')}
+          </p>
+        )}
+
         {queued ? (
           <div className="queue-state">
             <span className="spinner" aria-hidden="true" />

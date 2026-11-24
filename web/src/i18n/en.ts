@@ -5,6 +5,7 @@ export const en = {
 
   'conn.reconnecting': 'Connection lost — reconnecting…',
   'conn.offline': 'Offline. Reload the page to rejoin.',
+  'conn.offlineRetrying': 'Offline. Trying to reach the field…',
   'conn.connecting': 'Connecting…',
 
   'lobby.eyebrow': 'Hold the line. Pull the rope.',
@@ -22,6 +23,8 @@ export const en = {
   'lobby.rulesTitle': 'How to play',
   'lobby.rulesNote':
     'Every turn lasts 20 seconds. If time runs out, the round goes to your opponent. Disconnect for more than 30 seconds and the match is lost.',
+  'lobby.offlineNotice':
+    'The field is unreachable. Online play is disabled while the connection is down.',
 
   'rules.1': 'Both players reveal one card at the same time.',
   'rules.2': 'Highest card wins — with three twists.',

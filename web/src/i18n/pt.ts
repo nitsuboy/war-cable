@@ -7,6 +7,7 @@ export const pt: Record<TranslationKey, string> = {
 
   'conn.reconnecting': 'Conexão perdida — reconectando…',
   'conn.offline': 'Offline. Recarregue a página para voltar.',
+  'conn.offlineRetrying': 'Offline. Tentando alcançar o campo…',
   'conn.connecting': 'Conectando…',
 
   'lobby.eyebrow': 'Segure a linha. Puxe a corda.',
@@ -24,6 +25,8 @@ export const pt: Record<TranslationKey, string> = {
   'lobby.rulesTitle': 'Como jogar',
   'lobby.rulesNote':
     'Cada turno dura 20 segundos. Se o tempo acabar, a rodada vai para o oponente. Fique desconectado por mais de 30 segundos e a partida é perdida.',
+  'lobby.offlineNotice':
+    'O campo está inacessível. O jogo online fica desativado enquanto a conexão estiver fora.',
 
   'rules.1': 'Os dois jogadores revelam uma carta ao mesmo tempo.',
   'rules.2': 'A carta mais alta vence — com três exceções.',

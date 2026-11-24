@@ -418,14 +418,24 @@ p {
   font-size: 0.74rem;
   text-transform: uppercase;
   letter-spacing: 0.14em;
-}
-
-.divider::before,
+}.divider::before,
 .divider::after {
   content: "";
   flex: 1;
   height: 1px;
   background: var(--line);
+}
+
+.offline-note {
+  font-size: 0.8rem;
+  line-height: 1.5;
+  letter-spacing: 0.02em;
+  color: #f2d3c3;
+  background: rgba(194, 84, 47, 0.12);
+  border: 1px solid rgba(194, 84, 47, 0.4);
+  border-left: 3px solid var(--signal);
+  border-radius: 3px;
+  padding: 10px 12px;
 }
 
 .join-form {
@@ -1183,6 +1193,23 @@ p {
 @media (max-width: 560px) {
   .table {
     margin: 4px 0 auto;
+  }
+
+  .connection-banner {
+    left: 0;
+    right: 0;
+    top: 0;
+    transform: none;
+    border-radius: 0;
+    border-width: 0 0 1px;
+    padding: 10px 14px;
+    text-align: center;
+    font-size: 0.68rem;
+    letter-spacing: 0.06em;
+  }
+
+  .app-shell:has(> .connection-banner) {
+    padding-top: 68px;
   }
 
   .duelist-row {

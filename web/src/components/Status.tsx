@@ -20,14 +20,20 @@ export function ErrorToast({ message, onDismiss }: { message: string; onDismiss:
   );
 }
 
-export function ConnectionBanner({ status }: { status: ConnectionStatus }) {
+export function ConnectionBanner({
+  status,
+  retrying = false,
+}: {
+  status: ConnectionStatus;
+  retrying?: boolean;
+}) {
   const { t } = useI18n();
 
   const text =
     status === 'reconnecting'
       ? t('conn.reconnecting')
       : status === 'offline'
-        ? t('conn.offline')
+        ? t(retrying ? 'conn.offlineRetrying' : 'conn.offline')
         : t('conn.connecting');
 
   return <div className={`connection-banner ${status}`}>{text}</div>;

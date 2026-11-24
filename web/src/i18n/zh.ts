@@ -7,6 +7,7 @@ export const zh: Record<TranslationKey, string> = {
 
   'conn.reconnecting': '连接中断 — 正在重连…',
   'conn.offline': '已离线。请刷新页面重新加入。',
+  'conn.offlineRetrying': '已离线。正在尝试连接战场…',
   'conn.connecting': '正在连接…',
 
   'lobby.eyebrow': '守住战线，拉紧绳索。',
@@ -22,6 +23,7 @@ export const zh: Record<TranslationKey, string> = {
   'lobby.cancel': '取消',
   'lobby.rulesTitle': '玩法',
   'lobby.rulesNote': '每回合 20 秒。若超时，本回合判给对手。断线超过 30 秒则输掉比赛。',
+  'lobby.offlineNotice': '无法连接战场。连接中断期间在线对战已停用。',
 
   'rules.1': '双方同时亮出一张牌。',
   'rules.2': '点数大的获胜 — 但有三处例外。',

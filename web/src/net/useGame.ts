@@ -61,7 +61,8 @@ export type ConnectionStatus = 'connecting' | 'online' | 'reconnecting' | 'offli
 
 export interface GameSnapshot {
   status: ConnectionStatus;
-  ready: boolean;
+  /** True once the first connection attempt has finished, successful or not. */
+  booted: boolean;
   room: RoomState | null;
   round: RoundResult | null;
   over: MatchOver | null;
@@ -71,7 +72,7 @@ export interface GameSnapshot {
 
 const INITIAL: GameSnapshot = {
   status: 'connecting',
-  ready: false,
+  booted: false,
   room: null,
   round: null,
   over: null,
@@ -103,7 +104,6 @@ export function useGame() {
         ...previous,
         room,
         queued: false,
-        ready: true,
         error: null,
         over: room.phase === 'over' ? previous.over ?? deriveOver(room) : null,
       }));
@@ -123,8 +123,10 @@ export function useGame() {
       setState((previous) => ({ ...previous, over }));
     };
 
-    const start = async () => {
-      setState((previous) => ({ ...previous, status: 'connecting' }));
+    const start = async (announce = true) => {
+      if (announce) {
+        setState((previous) => ({ ...previous, status: 'connecting' }));
+      }
       const connection = new HubConnectionBuilder()
         .withUrl(HUB_URL, { withCredentials: false })
         .withAutomaticReconnect(RETRY_DELAYS)
@@ -161,14 +163,22 @@ export function useGame() {
 
         await hello(connection);
         connectionRef.current = connection;
-        setState((previous) => ({ ...previous, status: 'online', ready: true }));
+        setState((previous) => ({
+          ...previous,
+          status: 'online',
+          booted: true,
+        }));
       } catch {
         if (cancelled) {
           return;
         }
 
-        setState((previous) => ({ ...previous, status: 'offline' }));
-        retryHandle = window.setTimeout(() => void start(), 4000);
+        setState((previous) => ({
+          ...previous,
+          status: 'offline',
+          booted: true,
+        }));
+        retryHandle = window.setTimeout(() => void start(false), 4000);
       }
     };
 

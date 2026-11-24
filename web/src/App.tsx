@@ -29,7 +29,7 @@ export default function App() {
     void actions.pick(handIndex);
   };
 
-  if (!state.ready) {
+  if (!state.booted) {
     return (
       <div className="app-shell">
         <div className="ambient" aria-hidden="true" />
@@ -73,7 +73,9 @@ export default function App() {
 
       {state.round && room && room.phase !== 'waiting' && <RoundOverlay round={state.round} />}
 
-      {state.status !== 'online' && <ConnectionBanner status={state.status} />}
+      {state.status !== 'online' && (
+        <ConnectionBanner status={state.status} retrying={!room} />
+      )}
 
       {state.error && <ErrorToast message={t(state.error)} onDismiss={actions.dismissError} />}
     </div>
