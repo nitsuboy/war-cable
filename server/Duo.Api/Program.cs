@@ -32,7 +32,7 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 });
 
 var origins = builder.Configuration.GetSection("Cors:Origins").Get<string[]>()
-    ?? ["http://localhost:5173", "https://html-classic.itch.zone"];
+    ?? ["http://localhost:5173"];
 builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
     policy.WithOrigins(origins).AllowAnyHeader().AllowAnyMethod()));
 

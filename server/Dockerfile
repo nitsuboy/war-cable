@@ -15,7 +15,7 @@ RUN dotnet publish -c Release -o /app/publish /p:UseAppHost=false
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 
-RUN useradd -u 1000 -ms /bin/bash appuser && chown -R appuser:appuser /app
+RUN useradd -ms /bin/bash appuser && chown -R appuser:appuser /app
 USER appuser
 
 COPY --from=build --chown=appuser:appuser /app/publish .
