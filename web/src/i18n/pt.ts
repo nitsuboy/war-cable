@@ -14,6 +14,7 @@ export const pt: Record<TranslationKey, string> = {
   'lobby.tagline':
     'Nove cartas, três passos de corda. Supere seu rival, arraste o nó até a sua linha e capture quatro bandeiras para vencer.',
   'lobby.quickMatch': 'Partida rápida',
+  'lobby.playBot': 'Jogar contra o bot',
   'lobby.orFriend': 'ou jogue com um amigo',
   'lobby.createRoom': 'Criar sala privada',
   'lobby.roomCodeLabel': 'Código da sala',
@@ -48,6 +49,7 @@ export const pt: Record<TranslationKey, string> = {
   'table.room': 'Sala {code}',
   'table.round': 'Rodada {round}',
   'table.leave': 'Sair',
+  'table.botChip': 'Bot',
   'table.opponent': 'Oponente',
   'table.you': 'Você',
   'table.cards': '{count} cartas',
@@ -106,5 +108,6 @@ export const pt: Record<TranslationKey, string> = {
   'errors.invalidPick': 'Essa carta não pode ser jogada agora.',
   'errors.notOver': 'A partida ainda não terminou.',
   'errors.offlineAction': 'Você está offline. Reconectando…',
+  'errors.botFailed': 'Não foi possível iniciar a partida contra o bot. Tente novamente.',
   'errors.unknown': 'Algo deu errado. Tente novamente.',
 };

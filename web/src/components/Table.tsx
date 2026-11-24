@@ -9,6 +9,7 @@ interface TableProps {
   room: RoomState;
   pendingPick: number | null;
   overlayVisible: boolean;
+  vsBot?: boolean;
   onPick: (handIndex: number) => void;
   onLeave: () => void;
 }
@@ -45,7 +46,14 @@ function Track({ position }: { position: number }) {
   );
 }
 
-export function Table({ room, pendingPick, overlayVisible, onPick, onLeave }: TableProps) {
+export function Table({
+  room,
+  pendingPick,
+  overlayVisible,
+  vsBot = false,
+  onPick,
+  onLeave,
+}: TableProps) {
   const { t } = useI18n();
   const remaining = useCountdown(room.deadlineMs, room.paused);
   const viewTrack = room.yourSeat === 'A' ? room.track : -room.track;
@@ -80,61 +88,64 @@ export function Table({ room, pendingPick, overlayVisible, onPick, onLeave }: Ta
       <header className="table-top">
         <span className="chip">{t('table.room', { code: room.code })}</span>
         <span className="chip subtle">{t('table.round', { round: room.roundNumber })}</span>
+        {vsBot && <span className="chip subtle">{t('table.botChip')}</span>}
         <button type="button" className="btn ghost small" onClick={onLeave}>
           {t('table.leave')}
         </button>
       </header>
 
-      <section className="duelist">
-        <div className="duelist-row">
-          <div>
-            <p className="duelist-name">{t('table.opponent')}</p>
-            <span className={`status-pill ${opponentStatusClass}`}>{opponentStatus}</span>
+      <section className="table-layout">
+        <section className="duelist">
+          <div className="duelist-row">
+            <div>
+              <p className="duelist-name">{t('table.opponent')}</p>
+              <span className={`status-pill ${opponentStatusClass}`}>{opponentStatus}</span>
+            </div>
+            <Captures count={room.opponent.captures} target={room.targetCaptures} />
+            <span className="hand-count">{t('table.cards', { count: room.opponent.handCount })}</span>
           </div>
-          <Captures count={room.opponent.captures} target={room.targetCaptures} />
-          <span className="hand-count">{t('table.cards', { count: room.opponent.handCount })}</span>
-        </div>
-      </section>
+        </section>
 
-      <section className="arena">
-        <Track position={viewTrack} />
-        <div className="timer">
-          <div className="timer-meta">
-            <span>
-              {room.paused
-                ? t('table.timer.paused')
-                : room.phase === 'choosing'
-                  ? t('table.timer.choose')
-                  : '—'}
-            </span>
-            <span className={danger ? 'danger' : ''}>
-              {room.phase === 'choosing' ? `${seconds}s` : ''}
-            </span>
+        <section className="arena">
+          <Track position={viewTrack} />
+          <div className="timer">
+            <div className="timer-meta">
+              <span>
+                {room.paused
+                  ? t('table.timer.paused')
+                  : room.phase === 'choosing'
+                    ? t('table.timer.choose')
+                    : '—'}
+              </span>
+              <span className={danger ? 'danger' : ''}>
+                {room.phase === 'choosing' ? `${seconds}s` : ''}
+              </span>
+            </div>
+            <div className="timer-bar">
+              <div
+                className={`timer-fill${danger ? ' danger' : ''}`}
+                style={{ width: `${ratio * 100}%` }}
+              />
+            </div>
           </div>
-          <div className="timer-bar">
-            <div
-              className={`timer-fill${danger ? ' danger' : ''}`}
-              style={{ width: `${ratio * 100}%` }}
-            />
-          </div>
-        </div>
-      </section>
+        </section>
 
-      <section className="duelist you">
-        <div className="duelist-row">
-          <div>
-            <p className="duelist-name">{t('table.you')}</p>
-            <span className="status-pill you">
-              {room.you.picked
-                ? t('table.status.ordersGiven')
-                : room.paused
-                  ? t('table.status.waiting')
-                  : t('table.status.choosing')}
-            </span>
+        <section className="duelist you">
+          <div className="duelist-row">
+            <div>
+              <p className="duelist-name">{t('table.you')}</p>
+              <span className="status-pill you">
+                {room.you.picked
+                  ? t('table.status.ordersGiven')
+                  : room.paused
+                    ? t('table.status.waiting')
+                    : t('table.status.choosing')}
+              </span>
+            </div>
+            <Captures count={room.you.captures} target={room.targetCaptures} />
+            <span className="hand-count">{t('table.cards', { count: room.you.hand.length })}</span>
           </div>
-          <Captures count={room.you.captures} target={room.targetCaptures} />
-          <span className="hand-count">{t('table.cards', { count: room.you.hand.length })}</span>
-        </div>
+        </section>
       </section>
 
       <section className="hand-area">

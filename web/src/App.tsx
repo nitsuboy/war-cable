@@ -56,6 +56,7 @@ export default function App() {
             room={room}
             pendingPick={pendingPick}
             overlayVisible={state.round !== null}
+            vsBot={state.vsBot}
             onPick={handlePick}
             onLeave={() => void actions.leave()}
           />
@@ -66,6 +67,7 @@ export default function App() {
           disabled={state.status !== 'online'}
           onCreate={() => void actions.createRoom()}
           onQuickMatch={() => void actions.quickMatch()}
+          onPlayBot={() => void actions.playBot()}
           onCancelQueue={() => void actions.cancelQueue()}
           onJoin={(code) => void actions.joinRoom(code)}
         />

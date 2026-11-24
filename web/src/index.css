@@ -32,6 +32,13 @@ body,
   min-height: 100%;
 }
 
+.table-layout {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  grid-template-rows: 135px 100px 135px;
+  gap: 14px;
+}
+
 body {
   margin: 0;
   min-height: 100svh;
@@ -569,15 +576,18 @@ p {
 }
 
 .duelist {
+  grid-area: 1 / 2 / 2 / 3;
   border: 1px solid var(--line);
   border-left: 3px solid rgba(255, 255, 255, 0.12);
   background: var(--panel);
   border-radius: 5px;
   padding: 14px 18px;
   backdrop-filter: blur(8px);
+  align-content: center;
 }
 
 .duelist.you {
+  grid-area: 3 / 2 / 4 / 3;
   border-left-color: var(--brass);
   background: linear-gradient(180deg, rgba(201, 162, 74, 0.07), rgba(201, 162, 74, 0.015));
 }
@@ -626,8 +636,9 @@ p {
 }
 
 .captures {
-  display: flex;
-  gap: 4px;
+  display: grid;
+  grid-template-columns: 30px 30px;
+  grid-template-rows: 30px 30px; /* opcional, para forçar alturas iguais */
   flex: 1;
 }
 
@@ -650,6 +661,8 @@ p {
 /* ---------- arena / track ---------- */
 
 .arena {
+  align-content: center;
+  grid-area: 1 / 1 / 4 / 2;
   border: 1px solid var(--line);
   border-radius: 6px;
   padding: 18px clamp(14px, 4vw, 26px) 16px;
@@ -659,9 +672,10 @@ p {
   backdrop-filter: blur(8px);
 }
 
+
 .track {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: center;
   gap: 12px;
 }
@@ -680,30 +694,32 @@ p {
 
 .track-rail {
   position: relative;
+  width: 74px;
+  min-height: 240px; /* Altura mínima flexível */
+  height: auto;
   flex: 1;
-  min-width: 0;
-  max-width: 420px;
-  height: 74px;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  padding: 0 26px;
+  padding: 26px 0;
 }
 
 .track-line {
   position: absolute;
-  left: 8%;
-  right: 8%;
-  top: 50%;
-  height: 8px;
+  top: 8%;
+  bottom: 8%;
+  left: 50%;
+  width: 8px;
+  height: auto;
   border-radius: 999px;
-  transform: translateY(-50%);
+  transform: translateX(-50%);
   background: repeating-linear-gradient(
-    115deg,
+    25deg,
     #7c5f30 0 7px,
     #a2803f 7px 14px
   );
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 2px 4px rgba(0, 0, 0, 0.55);
+  box-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.16), 2px 0 4px rgba(0, 0, 0, 0.55);
 }
 
 .track-node {
@@ -1243,5 +1259,28 @@ p {
   .track-knot {
     width: 28px;
     height: 28px;
+  }
+
+  .captures {
+    justify-content: end;
+  }
+
+  .table-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 100px 271px 100px;
+    gap: 14px;
+  }
+
+  .arena {
+     grid-area: 2 / 1 / 4 / 2;
+  }
+
+  .duelist {
+     grid-area: 1 / 1 / 2 / 2;
+  }
+
+  .duelist.you {
+     grid-area: 4 / 1 / 5 / 2; 
   }
 }

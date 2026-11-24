@@ -13,6 +13,7 @@ export const zh: Record<TranslationKey, string> = {
   'lobby.eyebrow': '守住战线，拉紧绳索。',
   'lobby.tagline': '九张牌，绳索三步。击败对手，把绳结拉到你的一侧，夺取四面旗帜即可赢得战场。',
   'lobby.quickMatch': '快速对战',
+  'lobby.playBot': '与机器人对战',
   'lobby.orFriend': '或与好友对战',
   'lobby.createRoom': '创建私人房间',
   'lobby.roomCodeLabel': '房间代码',
@@ -45,6 +46,7 @@ export const zh: Record<TranslationKey, string> = {
   'table.room': '房间 {code}',
   'table.round': '第 {round} 回合',
   'table.leave': '离开',
+  'table.botChip': '机器人',
   'table.opponent': '对手',
   'table.you': '你',
   'table.cards': '{count} 张牌',
@@ -103,5 +105,6 @@ export const zh: Record<TranslationKey, string> = {
   'errors.invalidPick': '这张牌现在无法打出。',
   'errors.notOver': '比赛尚未结束。',
   'errors.offlineAction': '你已离线，正在重连…',
+  'errors.botFailed': '无法开始与机器人的对局，请重试。',
   'errors.unknown': '出错了，请重试。',
 };

@@ -9,11 +9,20 @@ interface LobbyProps {
   disabled: boolean;
   onCreate: () => void;
   onQuickMatch: () => void;
+  onPlayBot: () => void;
   onCancelQueue: () => void;
   onJoin: (code: string) => void;
 }
 
-export function Lobby({ queued, disabled, onCreate, onQuickMatch, onCancelQueue, onJoin }: LobbyProps) {
+export function Lobby({
+  queued,
+  disabled,
+  onCreate,
+  onQuickMatch,
+  onPlayBot,
+  onCancelQueue,
+  onJoin,
+}: LobbyProps) {
   const { t } = useI18n();
   const [code, setCode] = useState('');
 
@@ -62,6 +71,9 @@ export function Lobby({ queued, disabled, onCreate, onQuickMatch, onCancelQueue,
           <>
             <button type="button" className="btn primary large" onClick={onQuickMatch} disabled={disabled}>
               {t('lobby.quickMatch')}
+            </button>
+            <button type="button" className="btn gold" onClick={onPlayBot} disabled={disabled}>
+              {t('lobby.playBot')}
             </button>
             <div className="divider">
               <span>{t('lobby.orFriend')}</span>

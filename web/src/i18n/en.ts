@@ -12,6 +12,7 @@ export const en = {
   'lobby.tagline':
     'Nine cards, three steps of rope. Outplay your rival, drag the knot onto your line and capture four flags to take the field.',
   'lobby.quickMatch': 'Quick match',
+  'lobby.playBot': 'Play vs bot',
   'lobby.orFriend': 'or play with a friend',
   'lobby.createRoom': 'Create a private room',
   'lobby.roomCodeLabel': 'Room code',
@@ -46,6 +47,7 @@ export const en = {
   'table.room': 'Room {code}',
   'table.round': 'Round {round}',
   'table.leave': 'Leave',
+  'table.botChip': 'Bot',
   'table.opponent': 'Opponent',
   'table.you': 'You',
   'table.cards': '{count} cards',
@@ -104,6 +106,7 @@ export const en = {
   'errors.invalidPick': 'That card cannot be played now.',
   'errors.notOver': 'The match is not over yet.',
   'errors.offlineAction': 'You are offline. Reconnecting…',
+  'errors.botFailed': 'Could not start the bot match. Please try again.',
   'errors.unknown': 'Something went wrong. Please try again.',
 } as const;
 

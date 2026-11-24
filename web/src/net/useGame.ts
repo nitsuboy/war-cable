@@ -13,6 +13,7 @@ import type {
   RoundResult,
 } from '../game/types';
 import { loadIdentity, saveIdentity } from './identity';
+import { BotPlayer } from './bot';
 import type { TranslationKey } from '../i18n';
 
 const HUB_URL = import.meta.env.VITE_HUB_URL ?? '/hub';
@@ -68,6 +69,7 @@ export interface GameSnapshot {
   over: MatchOver | null;
   error: TranslationKey | null;
   queued: boolean;
+  vsBot: boolean;
 }
 
 const INITIAL: GameSnapshot = {
@@ -78,12 +80,14 @@ const INITIAL: GameSnapshot = {
   over: null,
   error: null,
   queued: false,
+  vsBot: false,
 };
 
 export function useGame() {
   const [state, setState] = useState<GameSnapshot>(INITIAL);
   const connectionRef = useRef<HubConnection | null>(null);
   const roundTimerRef = useRef<number | null>(null);
+  const botRef = useRef<BotPlayer | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -192,6 +196,8 @@ export function useGame() {
       if (roundTimerRef.current !== null) {
         window.clearTimeout(roundTimerRef.current);
       }
+      botRef.current?.dispose();
+      botRef.current = null;
       const connection = connectionRef.current;
       connectionRef.current = null;
       void connection?.stop();
@@ -263,7 +269,40 @@ export function useGame() {
     setState((previous) => ({ ...previous, queued: false }));
   }, [call]);
 
+  const playBot = useCallback(async () => {
+    const connection = connectionRef.current;
+    if (!connection || connection.state !== HubConnectionState.Connected) {
+      setState((previous) => ({ ...previous, error: 'errors.offlineAction' }));
+      return;
+    }
+
+    botRef.current?.dispose();
+    botRef.current = null;
+
+    const created = await call<JoinResult>('CreateRoom');
+    if (!created) {
+      return;
+    }
+    if (!created.ok || !created.roomCode) {
+      setState((previous) => ({ ...previous, error: describeCode(created.error) }));
+      return;
+    }
+
+    const bot = new BotPlayer();
+    const joined = await bot.join(created.roomCode);
+    if (!joined) {
+      await call('Leave');
+      setState((previous) => ({ ...previous, error: 'errors.botFailed' }));
+      return;
+    }
+
+    botRef.current = bot;
+    setState((previous) => ({ ...previous, vsBot: true }));
+  }, [call]);
+
   const leave = useCallback(async () => {
+    botRef.current?.dispose();
+    botRef.current = null;
     await call('Leave');
     setState((previous) => ({
       ...previous,
@@ -271,6 +310,7 @@ export function useGame() {
       round: null,
       over: null,
       queued: false,
+      vsBot: false,
     }));
   }, [call]);
 
@@ -280,6 +320,16 @@ export function useGame() {
 
   return {
     state,
-    actions: { createRoom, joinRoom, quickMatch, pick, rematch, leave, cancelQueue, dismissError },
+    actions: {
+      createRoom,
+      joinRoom,
+      quickMatch,
+      playBot,
+      pick,
+      rematch,
+      leave,
+      cancelQueue,
+      dismissError,
+    },
   };
 }
