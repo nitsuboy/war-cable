@@ -22,14 +22,3 @@ export function resolveLocal(yours: string, theirs: string): LocalOutcome {
 export function isSpecial(card: string): boolean {
   return card === 'X' || card === '0' || card === '4';
 }
-
-export const RULES_SUMMARY = [
-  'Both players reveal one card at the same time.',
-  'Highest card wins — with three twists.',
-  'X draws against everything.',
-  '0 beats 6 and 4, loses to 1, 2, 3 and 5.',
-  '4 beats 5 and 6, loses to 0, 1, 2 and 3.',
-  'The winner pushes the dragon one step toward their realm.',
-  'Win while the dragon is already in your realm to capture it.',
-  'First realm to 4 captured dragons wins the match.',
-] as const;

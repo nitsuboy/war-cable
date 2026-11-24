@@ -13,37 +13,38 @@ import type {
   RoundResult,
 } from '../game/types';
 import { loadIdentity, saveIdentity } from './identity';
+import type { TranslationKey } from '../i18n';
 
 const HUB_URL = import.meta.env.VITE_HUB_URL ?? '/hub';
 
 const RETRY_DELAYS = [0, 1000, 2000, 3000, 5000, 8000, 13000, 21000];
 
-const ERROR_MESSAGES: Record<string, string> = {
-  invalid_identity: 'Your saved session was rejected. Reload to start a new one.',
-  hello_required: 'Connection is not ready yet. Try again in a moment.',
-  rate_limited: 'Too many actions. Please slow down.',
-  already_in_room: 'You are already in a room.',
-  room_not_found: 'Room not found. Check the code.',
-  room_full: 'That room is already full.',
-  match_started: 'That match has already started.',
-  not_in_room: 'You are not in a room.',
-  not_choosing: 'The round is not accepting picks right now.',
-  invalid_pick: 'That card cannot be played now.',
-  not_over: 'The match is not over yet.',
+const ERROR_KEYS: Record<string, TranslationKey> = {
+  invalid_identity: 'errors.invalidIdentity',
+  hello_required: 'errors.helloRequired',
+  rate_limited: 'errors.rateLimited',
+  already_in_room: 'errors.alreadyInRoom',
+  room_not_found: 'errors.roomNotFound',
+  room_full: 'errors.roomFull',
+  match_started: 'errors.matchStarted',
+  not_in_room: 'errors.notInRoom',
+  not_choosing: 'errors.notChoosing',
+  invalid_pick: 'errors.invalidPick',
+  not_over: 'errors.notOver',
 };
 
-function describeError(error: unknown): string {
+function describeError(error: unknown): TranslationKey {
   const raw = error instanceof Error ? error.message : String(error);
   const marker = raw.lastIndexOf('HubException:');
   const code = (marker >= 0 ? raw.slice(marker + 'HubException:'.length) : raw).trim();
-  return ERROR_MESSAGES[code] ?? 'Something went wrong. Please try again.';
+  return ERROR_KEYS[code] ?? 'errors.unknown';
 }
 
-function describeCode(code: string | null): string {
+function describeCode(code: string | null): TranslationKey {
   if (!code) {
-    return 'Something went wrong. Please try again.';
+    return 'errors.unknown';
   }
-  return ERROR_MESSAGES[code] ?? 'Something went wrong. Please try again.';
+  return ERROR_KEYS[code] ?? 'errors.unknown';
 }
 
 function deriveOver(room: RoomState): MatchOver | null {
@@ -64,7 +65,7 @@ export interface GameSnapshot {
   room: RoomState | null;
   round: RoundResult | null;
   over: MatchOver | null;
-  error: string | null;
+  error: TranslationKey | null;
   queued: boolean;
 }
 
@@ -192,7 +193,7 @@ export function useGame() {
     if (!connection || connection.state !== HubConnectionState.Connected) {
       setState((previous) => ({
         ...previous,
-        error: 'You are offline. Reconnecting…',
+        error: 'errors.offlineAction',
       }));
       return null;
     }

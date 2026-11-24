@@ -1,4 +1,6 @@
-import { DragonMark } from './DragonMark';
+import { WarMark } from './WarMark';
+import { LanguageSwitcher } from './LanguageSwitcher';
+import { useI18n } from '../i18n';
 import type { RoomState } from '../game/types';
 
 interface ResultScreenProps {
@@ -7,40 +9,39 @@ interface ResultScreenProps {
   onLeave: () => void;
 }
 
-function reasonText(reason: string | null, won: boolean): string {
-  switch (reason) {
-    case 'wo':
-      return won
-        ? 'Your opponent could not reconnect in time.'
-        : 'You were disconnected for too long.';
-    case 'abandoned':
-      return won ? 'Your opponent left the match.' : 'You left the match.';
-    default:
-      return won ? 'Four dragons now answer to your realm.' : 'Four dragons now answer to your rival.';
-  }
-}
-
 export function ResultScreen({ room, onRematch, onLeave }: ResultScreenProps) {
+  const { t } = useI18n();
   const won = room.winnerSeat === room.yourSeat;
   const canRematch = room.opponent.connected && !room.you.rematchVote;
+
+  const reason = (() => {
+    switch (room.endReason) {
+      case 'wo':
+        return won ? t('result.woWin') : t('result.woLose');
+      case 'abandoned':
+        return won ? t('result.abandonedWin') : t('result.abandonedLose');
+      default:
+        return won ? t('result.capturesWin') : t('result.capturesLose');
+    }
+  })();
 
   return (
     <main className={`result ${won ? 'victory' : 'defeat'}`}>
       <div className="sigil small">
-        <DragonMark />
+        <WarMark />
       </div>
-      <p className="eyebrow">{won ? 'The dragons bow' : 'The dragons turn away'}</p>
-      <h1>{won ? 'Victory' : 'Defeat'}</h1>
-      <p className="muted">{reasonText(room.endReason, won)}</p>
+      <p className="eyebrow">{won ? t('result.wonEyebrow') : t('result.lostEyebrow')}</p>
+      <h1>{won ? t('result.victory') : t('result.defeat')}</h1>
+      <p className="muted">{reason}</p>
 
       <div className="result-score">
         <div>
-          <span className="score-label">You</span>
+          <span className="score-label">{t('table.you')}</span>
           <strong>{room.you.captures}</strong>
         </div>
         <span className="score-sep">—</span>
         <div>
-          <span className="score-label">Opponent</span>
+          <span className="score-label">{t('table.opponent')}</span>
           <strong>{room.opponent.captures}</strong>
         </div>
       </div>
@@ -53,15 +54,17 @@ export function ResultScreen({ room, onRematch, onLeave }: ResultScreenProps) {
           disabled={!canRematch}
         >
           {room.you.rematchVote
-            ? 'Waiting for opponent…'
+            ? t('result.rematchWaiting')
             : room.opponent.connected
-              ? 'Rematch'
-              : 'Opponent disconnected'}
+              ? t('result.rematch')
+              : t('result.opponentDisconnected')}
         </button>
         <button type="button" className="btn ghost" onClick={onLeave}>
-          Back to lobby
+          {t('result.backToLobby')}
         </button>
       </div>
+
+      <LanguageSwitcher />
     </main>
   );
 }

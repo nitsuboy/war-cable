@@ -1,19 +1,21 @@
 import type { RoundResult } from '../game/types';
+import { useI18n } from '../i18n';
 
 export function RoundOverlay({ round }: { round: RoundResult }) {
+  const { t } = useI18n();
   const timeout = round.reason === 'timeout';
 
   const headline = timeout
     ? round.outcome === 'win'
-      ? 'Opponent timed out — the round is yours.'
+      ? t('round.timeoutWin')
       : round.outcome === 'lose'
-        ? "Time's up — the round goes to your opponent."
-        : 'Both players timed out — no movement.'
+        ? t('round.timeoutLose')
+        : t('round.timeoutDraw')
     : round.outcome === 'win'
-      ? 'You win the round.'
+      ? t('round.win')
       : round.outcome === 'lose'
-        ? 'You lose the round.'
-        : 'Draw — the dragon holds.';
+        ? t('round.lose')
+        : t('round.draw');
 
   return (
     <div className={`overlay ${round.outcome}`} aria-live="polite">
@@ -21,18 +23,20 @@ export function RoundOverlay({ round }: { round: RoundResult }) {
         <div className="reveal-cards">
           <div className={`reveal-card${round.yourCard ? '' : ' empty'}`}>
             <span>{round.yourCard ?? '—'}</span>
-            <small>You</small>
+            <small>{t('table.you')}</small>
           </div>
           <span className="reveal-vs">vs</span>
           <div className={`reveal-card${round.opponentCard ? '' : ' empty'}`}>
             <span>{round.opponentCard ?? '—'}</span>
-            <small>Opponent</small>
+            <small>{t('table.opponent')}</small>
           </div>
         </div>
         <h2>{headline}</h2>
-        {round.captured && <p className="capture-banner">Dragon captured!</p>}
-        {round.opponentCaptured && <p className="capture-banner lost">Your opponent captured a dragon.</p>}
-        {timeout && <p className="muted small">No cards were revealed.</p>}
+        {round.captured && <p className="capture-banner">{t('round.captured')}</p>}
+        {round.opponentCaptured && (
+          <p className="capture-banner lost">{t('round.opponentCaptured')}</p>
+        )}
+        {timeout && <p className="muted small">{t('round.noCards')}</p>}
       </div>
     </div>
   );

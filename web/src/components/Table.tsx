@@ -1,6 +1,8 @@
-import { DragonMark } from './DragonMark';
+import { WarMark } from './WarMark';
+import { LanguageSwitcher } from './LanguageSwitcher';
 import { isSpecial } from '../game/rules';
 import { useCountdown } from '../game/useCountdown';
+import { useI18n } from '../i18n';
 import type { RoomState } from '../game/types';
 
 interface TableProps {
@@ -12,38 +14,39 @@ interface TableProps {
 }
 
 function Captures({ count, target }: { count: number; target: number }) {
+  const { t } = useI18n();
+
   return (
-    <div className="captures" aria-label={`${count} of ${target} dragons captured`}>
+    <div className="captures" aria-label={t('table.captures', { count, target })}>
       {Array.from({ length: target }, (_, index) => (
-        <DragonMark key={index} muted={index >= count} className={index < count ? 'captured' : ''} />
+        <WarMark key={index} muted={index >= count} className={index < count ? 'captured' : ''} />
       ))}
     </div>
   );
 }
 
 function Track({ position }: { position: number }) {
+  const { t } = useI18n();
+
   return (
     <div className="track">
-      <span className="track-label">Their realm</span>
+      <span className="track-label">{t('table.trackTheir')}</span>
       <div className="track-rail">
         <div className="track-line" />
         {[-1, 0, 1].map((slot) => (
           <div key={slot} className={`track-node${position === slot ? ' active' : ''}`}>
             <span className="track-dot" />
-            {position === slot && (
-              <span className="track-dragon">
-                <DragonMark />
-              </span>
-            )}
+            {position === slot && <span className="track-knot" aria-hidden="true" />}
           </div>
         ))}
       </div>
-      <span className="track-label">Your realm</span>
+      <span className="track-label">{t('table.trackYour')}</span>
     </div>
   );
 }
 
 export function Table({ room, pendingPick, overlayVisible, onPick, onLeave }: TableProps) {
+  const { t } = useI18n();
   const remaining = useCountdown(room.deadlineMs, room.paused);
   const viewTrack = room.yourSeat === 'A' ? room.track : -room.track;
   const total = room.turnSeconds * 1000;
@@ -59,12 +62,12 @@ export function Table({ room, pendingPick, overlayVisible, onPick, onLeave }: Ta
     overlayVisible;
 
   const opponentStatus = !room.opponent.connected
-    ? 'Disconnected'
+    ? t('table.status.offline')
     : room.paused
-      ? 'Waiting'
+      ? t('table.status.waiting')
       : room.opponent.picked
-        ? 'Ready'
-        : 'Choosing…';
+        ? t('table.status.ready')
+        : t('table.status.choosing');
 
   const opponentStatusClass = !room.opponent.connected
     ? 'offline'
@@ -75,21 +78,21 @@ export function Table({ room, pendingPick, overlayVisible, onPick, onLeave }: Ta
   return (
     <main className="table">
       <header className="table-top">
-        <span className="chip">Room {room.code}</span>
-        <span className="chip subtle">Round {room.roundNumber}</span>
+        <span className="chip">{t('table.room', { code: room.code })}</span>
+        <span className="chip subtle">{t('table.round', { round: room.roundNumber })}</span>
         <button type="button" className="btn ghost small" onClick={onLeave}>
-          Leave
+          {t('table.leave')}
         </button>
       </header>
 
       <section className="duelist">
         <div className="duelist-row">
           <div>
-            <p className="duelist-name">Opponent</p>
+            <p className="duelist-name">{t('table.opponent')}</p>
             <span className={`status-pill ${opponentStatusClass}`}>{opponentStatus}</span>
           </div>
           <Captures count={room.opponent.captures} target={room.targetCaptures} />
-          <span className="hand-count">{room.opponent.handCount} cards</span>
+          <span className="hand-count">{t('table.cards', { count: room.opponent.handCount })}</span>
         </div>
       </section>
 
@@ -97,8 +100,16 @@ export function Table({ room, pendingPick, overlayVisible, onPick, onLeave }: Ta
         <Track position={viewTrack} />
         <div className="timer">
           <div className="timer-meta">
-            <span>{room.paused ? 'Round paused' : room.phase === 'choosing' ? 'Choose a card' : '—'}</span>
-            <span className={danger ? 'danger' : ''}>{room.phase === 'choosing' ? `${seconds}s` : ''}</span>
+            <span>
+              {room.paused
+                ? t('table.timer.paused')
+                : room.phase === 'choosing'
+                  ? t('table.timer.choose')
+                  : '—'}
+            </span>
+            <span className={danger ? 'danger' : ''}>
+              {room.phase === 'choosing' ? `${seconds}s` : ''}
+            </span>
           </div>
           <div className="timer-bar">
             <div
@@ -112,13 +123,17 @@ export function Table({ room, pendingPick, overlayVisible, onPick, onLeave }: Ta
       <section className="duelist you">
         <div className="duelist-row">
           <div>
-            <p className="duelist-name">You</p>
+            <p className="duelist-name">{t('table.you')}</p>
             <span className="status-pill you">
-              {room.you.picked ? 'Locked in' : room.paused ? 'Waiting' : 'Choosing…'}
+              {room.you.picked
+                ? t('table.status.ordersGiven')
+                : room.paused
+                  ? t('table.status.waiting')
+                  : t('table.status.choosing')}
             </span>
           </div>
           <Captures count={room.you.captures} target={room.targetCaptures} />
-          <span className="hand-count">{room.you.hand.length} cards</span>
+          <span className="hand-count">{t('table.cards', { count: room.you.hand.length })}</span>
         </div>
       </section>
 
@@ -134,7 +149,7 @@ export function Table({ room, pendingPick, overlayVisible, onPick, onLeave }: Ta
                 className={`card${isSpecial(card) ? ' special' : ''}${selected ? ' selected' : ''}`}
                 onClick={() => onPick(index)}
                 disabled={locked}
-                aria-label={`Play card ${card}`}
+                aria-label={t('table.cardAria', { card })}
               >
                 <span className="card-value">{card}</span>
               </button>
@@ -143,12 +158,16 @@ export function Table({ room, pendingPick, overlayVisible, onPick, onLeave }: Ta
         </div>
         <p className="hand-hint">
           {room.you.picked
-            ? 'Card locked in. Waiting for your opponent…'
+            ? t('table.hint.picked')
             : room.paused
-              ? 'Waiting for your opponent to reconnect…'
-              : 'Pick one card. Both cards are revealed at the same time.'}
+              ? t('table.hint.paused')
+              : t('table.hint.choose')}
         </p>
       </section>
+
+      <div className="lang-row table-lang">
+        <LanguageSwitcher />
+      </div>
     </main>
   );
 }

@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { DragonMark } from './DragonMark';
+import { WarMark } from './WarMark';
+import { LanguageSwitcher } from './LanguageSwitcher';
+import { useI18n } from '../i18n';
 import type { RoomState } from '../game/types';
 
 interface WaitingRoomProps {
@@ -8,6 +10,7 @@ interface WaitingRoomProps {
 }
 
 export function WaitingRoom({ room, onLeave }: WaitingRoomProps) {
+  const { t } = useI18n();
   const [copied, setCopied] = useState(false);
 
   const copy = async () => {
@@ -23,23 +26,27 @@ export function WaitingRoom({ room, onLeave }: WaitingRoomProps) {
   return (
     <main className="waiting">
       <div className="sigil small">
-        <DragonMark />
+        <WarMark />
       </div>
-      <p className="eyebrow">Private room</p>
-      <button type="button" className="room-code" onClick={copy} title="Copy room code">
+      <p className="eyebrow">{t('waiting.eyebrow')}</p>
+      <button
+        type="button"
+        className="room-code"
+        onClick={copy}
+        title={t('waiting.copyTitle')}
+      >
         {room.code}
       </button>
-      <p className="muted">{copied ? 'Copied to clipboard' : 'Click the code to copy it'}</p>
+      <p className="muted">{copied ? t('waiting.copied') : t('waiting.clickToCopy')}</p>
       <div className="waiting-status">
         <span className="spinner" aria-hidden="true" />
-        <span>Waiting for an opponent to join…</span>
+        <span>{t('waiting.waiting')}</span>
       </div>
-      <p className="muted small">
-        Share the code with your rival. The match starts as soon as they enter.
-      </p>
+      <p className="muted small">{t('waiting.share')}</p>
       <button type="button" className="btn ghost" onClick={onLeave}>
-        Cancel room
+        {t('waiting.cancel')}
       </button>
+      <LanguageSwitcher />
     </main>
   );
 }

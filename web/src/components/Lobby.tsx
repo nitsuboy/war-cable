@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
-import { DragonMark } from './DragonMark';
-import { RULES_SUMMARY } from '../game/rules';
+import { WarMark } from './WarMark';
+import { LanguageSwitcher } from './LanguageSwitcher';
+import { RULES_KEYS, useI18n } from '../i18n';
 
 interface LobbyProps {
   queued: boolean;
@@ -13,6 +14,7 @@ interface LobbyProps {
 }
 
 export function Lobby({ queued, disabled, onCreate, onQuickMatch, onCancelQueue, onJoin }: LobbyProps) {
+  const { t } = useI18n();
   const [code, setCode] = useState('');
 
   const submit = (event: FormEvent) => {
@@ -25,16 +27,17 @@ export function Lobby({ queued, disabled, onCreate, onQuickMatch, onCancelQueue,
 
   return (
     <main className="lobby">
+      <div className="lang-row">
+        <LanguageSwitcher />
+      </div>
+
       <header className="lobby-hero">
         <div className="sigil">
-          <DragonMark />
+          <WarMark />
         </div>
-        <p className="eyebrow">A duel of dragons and nerve</p>
-        <h1>Dragon Duel</h1>
-        <p className="tagline">
-          Nine cards. Three steps of track. Read your rival, push the dragon into
-          your realm and capture four of them.
-        </p>
+        <p className="eyebrow">{t('lobby.eyebrow')}</p>
+        <h1>Tug of War</h1>
+        <p className="tagline">{t('lobby.tagline')}</p>
       </header>
 
       <section className="panel lobby-actions">
@@ -42,27 +45,27 @@ export function Lobby({ queued, disabled, onCreate, onQuickMatch, onCancelQueue,
           <div className="queue-state">
             <span className="spinner" aria-hidden="true" />
             <div>
-              <h2>Searching for an opponent…</h2>
-              <p className="muted">You will be paired with the next player in the queue.</p>
+              <h2>{t('lobby.searching')}</h2>
+              <p className="muted">{t('lobby.searchingHint')}</p>
             </div>
             <button type="button" className="btn ghost" onClick={onCancelQueue}>
-              Cancel
+              {t('lobby.cancel')}
             </button>
           </div>
         ) : (
           <>
             <button type="button" className="btn primary large" onClick={onQuickMatch} disabled={disabled}>
-              Quick match
+              {t('lobby.quickMatch')}
             </button>
             <div className="divider">
-              <span>or play with a friend</span>
+              <span>{t('lobby.orFriend')}</span>
             </div>
             <button type="button" className="btn ghost" onClick={onCreate} disabled={disabled}>
-              Create a private room
+              {t('lobby.createRoom')}
             </button>
             <form className="join-form" onSubmit={submit}>
               <label htmlFor="room-code" className="sr-only">
-                Room code
+                {t('lobby.roomCodeLabel')}
               </label>
               <input
                 id="room-code"
@@ -71,14 +74,14 @@ export function Lobby({ queued, disabled, onCreate, onQuickMatch, onCancelQueue,
                 onChange={(event) =>
                   setCode(event.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6))
                 }
-                placeholder="ROOM CODE"
+                placeholder={t('lobby.roomCodePlaceholder')}
                 autoComplete="off"
                 spellCheck={false}
                 maxLength={6}
                 inputMode="text"
               />
               <button type="submit" className="btn gold" disabled={disabled || code.length !== 6}>
-                Join
+                {t('lobby.join')}
               </button>
             </form>
           </>
@@ -86,16 +89,13 @@ export function Lobby({ queued, disabled, onCreate, onQuickMatch, onCancelQueue,
       </section>
 
       <section className="panel rules">
-        <h2>How to play</h2>
+        <h2>{t('lobby.rulesTitle')}</h2>
         <ul>
-          {RULES_SUMMARY.map((rule) => (
-            <li key={rule}>{rule}</li>
+          {RULES_KEYS.map((key) => (
+            <li key={key}>{t(key)}</li>
           ))}
         </ul>
-        <p className="muted small">
-          Every turn lasts 20 seconds. If time runs out, the round goes to your
-          opponent. Disconnect for more than 30 seconds and the match is lost.
-        </p>
+        <p className="muted small">{t('lobby.rulesNote')}</p>
       </section>
     </main>
   );

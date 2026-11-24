@@ -6,8 +6,10 @@ import { Table } from './components/Table';
 import { WaitingRoom } from './components/WaitingRoom';
 import { BootScreen, ConnectionBanner, ErrorToast } from './components/Status';
 import { useGame } from './net/useGame';
+import { useI18n } from './i18n';
 
 export default function App() {
+  const { t } = useI18n();
   const { state, actions } = useGame();
   const [pendingPick, setPendingPick] = useState<number | null>(null);
   const room = state.room;
@@ -73,7 +75,7 @@ export default function App() {
 
       {state.status !== 'online' && <ConnectionBanner status={state.status} />}
 
-      {state.error && <ErrorToast message={state.error} onDismiss={actions.dismissError} />}
+      {state.error && <ErrorToast message={t(state.error)} onDismiss={actions.dismissError} />}
     </div>
   );
 }
