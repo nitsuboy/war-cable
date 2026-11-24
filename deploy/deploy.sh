@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build and deploy the game server using Docker Compose.
+# Build and deploy the game server using Docker Compose on Linux.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
