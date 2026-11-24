@@ -1,0 +1,32 @@
+# Dragon Duel — Caddy reverse proxy
+#
+# Usage:
+#   export DUO_DOMAIN=203-0-113-7.sslip.io
+#   sudo cp deploy/Caddyfile /etc/caddy/Caddyfile
+#   sudo systemctl reload caddy
+#
+# Caddy obtains and renews the TLS certificate automatically, terminates HTTPS
+# and proxies both the SignalR negotiate requests and the WebSocket upgrade to
+# Kestrel on loopback. It also sets X-Forwarded-For / X-Forwarded-Proto, which
+# the API trusts for real client IPs and rate limiting.
+
+{$DUO_DOMAIN} {
+	encode zstd gzip
+
+	reverse_proxy 127.0.0.1:5000
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "no-referrer"
+		-Server
+	}
+
+	log {
+		output file /var/log/caddy/duo-access.log {
+			roll_size 20mb
+			roll_keep 5
+		}
+		format console
+	}
+}

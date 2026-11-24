@@ -1,0 +1,45 @@
+# ---------- .NET / C# ----------
+bin/
+obj/
+TestResults/
+coverage/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vs/
+
+# ---------- Node / Vite ----------
+node_modules/
+dist/
+dist-ssr/
+.vite/
+*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ---------- Build & package output ----------
+artifacts/
+
+# ---------- Local configuration & secrets ----------
+.env
+.env.*
+!.env.example
+*.local
+*.pfx
+*.pem
+*.key
+
+# ---------- Logs ----------
+*.log
+logs/
+
+# ---------- Editors & OS ----------
+.idea/
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+Thumbs.db
+*.sw?

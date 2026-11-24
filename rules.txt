@@ -1,0 +1,9 @@
+cards = [carda.value,cardb.value]
+if(cards.has("x") || cards[0]==cards[1])
+	return draw
+if(cards.has(0))
+	if(cards.has(6))
+		return cards.index(0).player win 
+if(cards.has(4))
+	return cards.min.player wins
+return cards.max.player wins
