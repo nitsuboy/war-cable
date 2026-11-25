@@ -1,15 +1,35 @@
 using System.Threading.RateLimiting;
 using Duo.Api;
+using Duo.Api.Accounts;
+using Duo.Api.Data;
 using Duo.Api.Rooms;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.Configure<GuardOptions>(builder.Configuration.GetSection("Guard"));
+builder.Services.Configure<AuthOptions>(builder.Configuration.GetSection("Auth"));
+builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<ConnectionGuard>();
 builder.Services.AddSingleton<IdentityStore>();
 builder.Services.AddSingleton<RoomService>();
+builder.Services.AddSingleton<AuthThrottle>();
+builder.Services.AddSingleton(sp => new PasswordHasher(
+    sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<AuthOptions>>().Value.PasswordIterations));
+builder.Services.AddSingleton<AccountService>();
 builder.Services.AddHostedService<RoomSweeper>();
+
+var dataDirectory = builder.Configuration["Storage:DataDirectory"] ?? "data";
+Directory.CreateDirectory(dataDirectory);
+
+var connectionString = builder.Configuration.GetConnectionString("Duo")
+    ?? $"Data Source={Path.Combine(dataDirectory, "duo.db")};Default Timeout=5";
+
+EnsureSqliteDirectory(connectionString);
+
+builder.Services.AddDbContextFactory<DuoDbContext>(options => options.UseSqlite(connectionString));
 
 builder.Services.AddSignalR(options =>
 {
@@ -53,6 +73,16 @@ builder.Services.AddRateLimiter(options =>
 
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var factory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<DuoDbContext>>();
+    using var db = factory.CreateDbContext();
+    db.Database.Migrate();
+    // WAL persists in the database file; it keeps readers from blocking the
+    // single writer while a match result is being recorded.
+    db.Database.ExecuteSqlRaw("PRAGMA journal_mode=WAL;");
+}
+
 app.UseForwardedHeaders();
 app.UseWebSockets();
 app.UseCors();
@@ -68,3 +98,18 @@ app.MapGet("/health", (RoomService rooms) => Results.Ok(new
 app.MapHub<GameHub>("/hub").RequireRateLimiting("http");
 
 app.Run();
+
+static void EnsureSqliteDirectory(string connectionString)
+{
+    var dataSource = new SqliteConnectionStringBuilder(connectionString).DataSource;
+    if (string.IsNullOrWhiteSpace(dataSource) || dataSource == ":memory:")
+    {
+        return;
+    }
+
+    var directory = Path.GetDirectoryName(Path.GetFullPath(dataSource));
+    if (!string.IsNullOrEmpty(directory))
+    {
+        Directory.CreateDirectory(directory);
+    }
+}

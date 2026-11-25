@@ -88,6 +88,7 @@ export function Table({
       <header className="table-top">
         <span className="chip">{t('table.room', { code: room.code })}</span>
         <span className="chip subtle">{t('table.round', { round: room.roundNumber })}</span>
+        {room.rated && <span className="chip subtle ranked">{t('table.rankedChip')}</span>}
         {vsBot && <span className="chip subtle">{t('table.botChip')}</span>}
         <button type="button" className="btn ghost small" onClick={onLeave}>
           {t('table.leave')}
@@ -98,7 +99,14 @@ export function Table({
         <section className="duelist">
           <div className="duelist-row">
             <div>
-              <p className="duelist-name">{t('table.opponent')}</p>
+              <p className="duelist-name">
+                {room.opponent.bot
+                  ? t('table.botChip')
+                  : room.opponent.username ?? t('table.opponent')}
+                {room.opponent.rating != null && (
+                  <span className="rating-tag">{room.opponent.rating}</span>
+                )}
+              </p>
               <span className={`status-pill ${opponentStatusClass}`}>{opponentStatus}</span>
             </div>
             <Captures count={room.opponent.captures} target={room.targetCaptures} />
@@ -133,7 +141,12 @@ export function Table({
         <section className="duelist you">
           <div className="duelist-row">
             <div>
-              <p className="duelist-name">{t('table.you')}</p>
+              <p className="duelist-name">
+                {room.you.username ?? t('table.you')}
+                {room.you.rating != null && (
+                  <span className="rating-tag">{room.you.rating}</span>
+                )}
+              </p>
               <span className="status-pill you">
                 {room.you.picked
                   ? t('table.status.ordersGiven')

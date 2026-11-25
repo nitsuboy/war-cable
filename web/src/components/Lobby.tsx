@@ -2,11 +2,18 @@ import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { WarMark } from './WarMark';
 import { LanguageSwitcher } from './LanguageSwitcher';
+import { AccountPanel } from './AccountPanel';
 import { RULES_KEYS, useI18n } from '../i18n';
+import type { AccountView, LeaderboardRow } from '../game/types';
 
 interface LobbyProps {
   queued: boolean;
   disabled: boolean;
+  account: AccountView | null;
+  leaderboard: LeaderboardRow[];
+  onLogin: (username: string, password: string) => Promise<void>;
+  onRegister: (username: string, password: string) => Promise<void>;
+  onLogout: () => Promise<void>;
   onCreate: () => void;
   onQuickMatch: () => void;
   onPlayBot: () => void;
@@ -17,6 +24,11 @@ interface LobbyProps {
 export function Lobby({
   queued,
   disabled,
+  account,
+  leaderboard,
+  onLogin,
+  onRegister,
+  onLogout,
   onCreate,
   onQuickMatch,
   onPlayBot,
@@ -48,6 +60,14 @@ export function Lobby({
         <h1>Tug of War</h1>
         <p className="tagline">{t('lobby.tagline')}</p>
       </header>
+
+      <AccountPanel
+        account={account}
+        leaderboard={leaderboard}
+        onLogin={onLogin}
+        onRegister={onRegister}
+        onLogout={onLogout}
+      />
 
       <section className="panel lobby-actions">
         {disabled && (

@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Security.Cryptography;
+using Duo.Api.Accounts;
 using Duo.Api.Contracts;
 using Duo.Domain;
 using Microsoft.AspNetCore.SignalR;
@@ -7,14 +8,24 @@ using Microsoft.Extensions.Options;
 
 namespace Duo.Api.Rooms;
 
-public sealed record SeatCredentials(string PlayerId, string Token, string Ip, string ConnectionId);
+public sealed record SeatCredentials(
+    string PlayerId,
+    string Token,
+    string Ip,
+    string ConnectionId,
+    string? AccountId = null,
+    string? Username = null,
+    int? Rating = null);
 
 public sealed record WaitingPlayer(
     string PlayerId,
     string Token,
     string Ip,
     string ConnectionId,
-    long EnqueuedAtUnixMs);
+    long EnqueuedAtUnixMs,
+    string? AccountId = null,
+    string? Username = null,
+    int? Rating = null);
 
 /// <summary>
 /// Owns every room and the quick-match queue. All room mutation is serialised by
@@ -25,6 +36,8 @@ public sealed class RoomService
 {
     private static readonly char[] CodeAlphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789".ToCharArray();
 
+    private const long BotRematchDelayMs = 900;
+
     private readonly ConcurrentDictionary<string, Room> _rooms = new(StringComparer.Ordinal);
     private readonly ConcurrentDictionary<string, string> _roomByPlayer = new(StringComparer.Ordinal);
     private readonly ConcurrentDictionary<string, string> _roomByConnection = new(StringComparer.Ordinal);
@@ -34,17 +47,20 @@ public sealed class RoomService
 
     private readonly IHubContext<GameHub> _hub;
     private readonly ConnectionGuard _guard;
+    private readonly AccountService _accounts;
     private readonly GuardOptions _options;
     private readonly ILogger<RoomService> _log;
 
     public RoomService(
         IHubContext<GameHub> hub,
         ConnectionGuard guard,
+        AccountService accounts,
         IOptions<GuardOptions> options,
         ILogger<RoomService> log)
     {
         _hub = hub;
         _guard = guard;
+        _accounts = accounts;
         _options = options.Value;
         _log = log;
     }
@@ -84,6 +100,9 @@ public sealed class RoomService
                 Token = credentials.Token,
                 Ip = credentials.Ip,
                 ConnectionId = credentials.ConnectionId,
+                AccountId = credentials.AccountId,
+                Username = credentials.Username,
+                Rating = credentials.Rating,
             };
 
             room = new Room(code, host, _options.TurnSeconds);
@@ -142,6 +161,9 @@ public sealed class RoomService
                 Token = credentials.Token,
                 Ip = credentials.Ip,
                 ConnectionId = credentials.ConnectionId,
+                AccountId = credentials.AccountId,
+                Username = credentials.Username,
+                Rating = credentials.Rating,
             };
 
             room.AddGuest(guest);
@@ -172,7 +194,10 @@ public sealed class RoomService
             credentials.Token,
             credentials.Ip,
             credentials.ConnectionId,
-            Room.NowMs);
+            Room.NowMs,
+            credentials.AccountId,
+            credentials.Username,
+            credentials.Rating);
 
         while (_queue.TryDequeue(out var other))
         {
@@ -208,6 +233,66 @@ public sealed class RoomService
 
         _queue.Enqueue(waiting);
         return new JoinResult(true, null, null, Queued: true);
+    }
+
+    public async Task<JoinResult> PlayBotAsync(SeatCredentials credentials)
+    {
+        CancelQueue(credentials.PlayerId);
+
+        if (_roomByPlayer.ContainsKey(credentials.PlayerId))
+        {
+            return new JoinResult(false, "already_in_room", null);
+        }
+
+        if (!_guard.TryOpenRoom(credentials.Ip))
+        {
+            return new JoinResult(false, "rate_limited", null);
+        }
+
+        Room room;
+        lock (_membership)
+        {
+            if (_roomByPlayer.ContainsKey(credentials.PlayerId))
+            {
+                _guard.CloseRoom(credentials.Ip);
+                return new JoinResult(false, "already_in_room", null);
+            }
+
+            var code = NextCode();
+            var host = new Seat
+            {
+                Player = Player.A,
+                PlayerId = credentials.PlayerId,
+                Token = credentials.Token,
+                Ip = credentials.Ip,
+                ConnectionId = credentials.ConnectionId,
+                AccountId = credentials.AccountId,
+                Username = credentials.Username,
+                Rating = credentials.Rating,
+            };
+
+            // A bot is just a seat with no connection: the ticker plays for it.
+            var bot = new Seat
+            {
+                Player = Player.B,
+                PlayerId = "bot_" + Guid.NewGuid().ToString("N"),
+                Token = Convert.ToHexString(RandomNumberGenerator.GetBytes(16)),
+                Ip = credentials.Ip,
+                ConnectionId = null,
+                IsBot = true,
+                Username = "Bot",
+            };
+
+            room = new Room(code, host, _options.TurnSeconds);
+            room.AddGuest(bot);
+
+            _rooms[code] = room;
+            _roomByPlayer[host.PlayerId] = code;
+            _roomByConnection[credentials.ConnectionId] = code;
+        }
+
+        await BroadcastStateAsync(room);
+        return new JoinResult(true, null, room.Code);
     }
 
     public async Task ReattachAsync(string playerId, string token, string connectionId, string ip)
@@ -357,18 +442,18 @@ public sealed class RoomService
                 return;
             }
 
-            if (room.Phase == GamePhase.Choosing)
-            {
-                room.End("abandoned");
-                var winner = seat.Player.Opponent();
-                await BroadcastMatchOverAsync(room, winner, "abandoned");
-            }
-
             seat.ConnectionId = null;
             seat.DisconnectedAtUnix = Room.NowMs;
             _roomByConnection.TryRemove(connectionId, out _);
             _roomByPlayer.TryRemove(seat.PlayerId, out _);
             UpdatePauseState(room);
+
+            if (room.Phase == GamePhase.Choosing)
+            {
+                await FinishMatchAsync(room, seat.Player.Opponent(), "abandoned");
+                return;
+            }
+
             await BroadcastStateAsync(room);
         }
         finally
@@ -455,11 +540,14 @@ public sealed class RoomService
             {
                 if (seat.DisconnectedAtUnix is { } at && now - at > graceMs)
                 {
-                    room.End("wo");
-                    await BroadcastMatchOverAsync(room, seat.Player.Opponent(), "wo");
-                    await BroadcastStateAsync(room);
+                    await FinishMatchAsync(room, seat.Player.Opponent(), "wo");
                     return;
                 }
+            }
+
+            if (await TryPlayBotAsync(room, now))
+            {
+                return;
             }
 
             if (!room.IsTurnExpired())
@@ -493,11 +581,66 @@ public sealed class RoomService
             return;
         }
 
-        if (room.Phase == GamePhase.Over
-            && now - room.LastActivityUnix > _options.FinishedRoomIdleSeconds * 1000L)
+        if (room.Phase == GamePhase.Over)
         {
-            RemoveRoom(room);
+            if (room.BotSeat is { RematchVote: false } bot
+                && now - room.LastActivityUnix > BotRematchDelayMs)
+            {
+                bot.RematchVote = true;
+                room.Touch();
+
+                if (room.Seats.Count() == 2 && room.Seats.All(s => s.Connected && s.RematchVote))
+                {
+                    room.StartMatch();
+                }
+
+                await BroadcastStateAsync(room);
+                return;
+            }
+
+            if (now - room.LastActivityUnix > _options.FinishedRoomIdleSeconds * 1000L)
+            {
+                RemoveRoom(room);
+            }
         }
+    }
+
+    /// <summary>
+    /// Lets the bot pick once its think time is up. Returns true when the round
+    /// was resolved here, so the caller stops instead of rechecking the timeout.
+    /// </summary>
+    private async Task<bool> TryPlayBotAsync(Room room, long now)
+    {
+        var bot = room.BotSeat;
+        if (bot is null
+            || room.Engine.State.HasPicked(bot.Player)
+            || now < room.BotPickAtUnixMs)
+        {
+            return false;
+        }
+
+        var state = room.Engine.State;
+        var capturing = (bot.Player == Player.A ? state.Track : -state.Track)
+            == MatchState.TrackASide;
+
+        var index = BotStrategy.ChooseCardIndex(state.Hand(bot.Player), capturing);
+        if (!room.Engine.TrySubmitPick(bot.Player, index))
+        {
+            return false;
+        }
+
+        room.Touch();
+
+        if (room.Engine.CanResolve)
+        {
+            var result = room.Engine.TryResolveRound()!;
+            await BroadcastRoundAsync(room, result);
+            await AfterRoundAsync(room);
+            return true;
+        }
+
+        await BroadcastStateAsync(room);
+        return false;
     }
 
     private async Task AfterRoundAsync(Room room)
@@ -505,14 +648,66 @@ public sealed class RoomService
         if (room.Engine.State.IsOver)
         {
             var winner = room.Engine.State.Winner!.Value;
-            room.End("captures");
-            await BroadcastMatchOverAsync(room, winner, "captures");
-            await BroadcastStateAsync(room);
+            await FinishMatchAsync(room, winner, "captures");
             return;
         }
 
         room.StartNextRound();
         await BroadcastStateAsync(room);
+    }
+
+    /// <summary>
+    /// The only place a match is ended. Records the ranked result once, then
+    /// tells both seats and refreshes the room state.
+    /// </summary>
+    private async Task FinishMatchAsync(Room room, Player winner, string reason)
+    {
+        if (room.Phase == GamePhase.Over)
+        {
+            return;
+        }
+
+        room.End(reason);
+
+        MatchRatingResult? rating = null;
+        if (room.Ranked)
+        {
+            rating = await ApplyRatingAsync(room, winner);
+        }
+
+        await BroadcastMatchOverAsync(room, winner, reason, rating);
+        await BroadcastStateAsync(room);
+    }
+
+    private async Task<MatchRatingResult?> ApplyRatingAsync(Room room, Player winner)
+    {
+        var host = room.Host;
+        var guest = room.Guest;
+        var winnerSeat = room.SeatOf(winner);
+        if (host.AccountId is null
+            || guest?.AccountId is null
+            || winnerSeat?.AccountId is null
+            || !room.TryMarkResultRecorded())
+        {
+            return null;
+        }
+
+        try
+        {
+            var result = await _accounts.ApplyMatchAsync(
+                host.AccountId,
+                guest.AccountId,
+                winnerSeat.AccountId);
+
+            host.Rating = result.RatingA;
+            guest.Rating = result.RatingB;
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _log.LogError(ex, "Failed to record ranked result for room {RoomCode}", room.Code);
+            return null;
+        }
     }
 
     private async Task AttachLockedAsync(Room room, Seat seat, SeatCredentials credentials)
@@ -553,6 +748,9 @@ public sealed class RoomService
                 Token = host.Token,
                 Ip = host.Ip,
                 ConnectionId = host.ConnectionId,
+                AccountId = host.AccountId,
+                Username = host.Username,
+                Rating = host.Rating,
             };
 
             var guestSeat = new Seat
@@ -562,10 +760,18 @@ public sealed class RoomService
                 Token = guestCredentials.Token,
                 Ip = guestCredentials.Ip,
                 ConnectionId = guestCredentials.ConnectionId,
+                AccountId = guestCredentials.AccountId,
+                Username = guestCredentials.Username,
+                Rating = guestCredentials.Rating,
             };
 
             var room = new Room(code, hostSeat, _options.TurnSeconds);
             room.AddGuest(guestSeat);
+
+            if (hostSeat.AccountId is not null && guestSeat.AccountId is not null)
+            {
+                room.MarkRanked();
+            }
 
             _rooms[code] = room;
             _roomByPlayer[host.PlayerId] = code;
@@ -622,7 +828,11 @@ public sealed class RoomService
         }
     }
 
-    private async Task BroadcastMatchOverAsync(Room room, Player winner, string reason)
+    private async Task BroadcastMatchOverAsync(
+        Room room,
+        Player winner,
+        string reason,
+        MatchRatingResult? rating)
     {
         foreach (var seat in room.Seats)
         {
@@ -632,8 +842,15 @@ public sealed class RoomService
             }
 
             var view = seat.Player == winner ? "you" : "opponent";
+            var delta = rating is null
+                ? (int?)null
+                : seat.Player == Player.A ? rating.DeltaA : rating.DeltaB;
+            var newRating = rating is null
+                ? (int?)null
+                : seat.Player == Player.A ? rating.RatingA : rating.RatingB;
+
             await _hub.Clients.Client(connectionId)
-                .SendAsync("MatchOver", new MatchOverDto(view, reason));
+                .SendAsync("MatchOver", new MatchOverDto(view, reason, delta, newRating));
         }
     }
 

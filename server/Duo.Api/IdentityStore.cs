@@ -1,13 +1,15 @@
 using System.Collections.Concurrent;
 using System.Security.Cryptography;
 using System.Text;
+using Duo.Api.Accounts;
 
 namespace Duo.Api;
 
 /// <summary>
-/// Issues and validates opaque player identities. The client persists
-/// (playerId, token) and presents them again to reconnect; IP is never used as
-/// identity. Tokens are compared in constant time.
+/// Issues and validates anonymous guest identities. Registered accounts are
+/// resolved by <see cref="AccountService"/> through their session token instead.
+/// Guests are still kept in memory: losing them on restart costs a reconnect,
+/// not an account.
 /// </summary>
 public sealed class IdentityStore
 {
@@ -24,10 +26,11 @@ public sealed class IdentityStore
     private static long NowUnix => DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
     /// <summary>
-    /// Returns the identity for the given credentials, creating a new one when
-    /// the client has none, or null when the credentials are invalid.
+    /// Returns the guest identity for the given credentials, creating a new one
+    /// when the client has none, or null when the credentials are invalid.
+    /// Account-shaped player ids are rejected so a guest can never shadow one.
     /// </summary>
-    public Identity? Resolve(string? playerId, string? token)
+    public Identity? ResolveGuest(string? playerId, string? token)
     {
         if (string.IsNullOrWhiteSpace(playerId))
         {
@@ -35,6 +38,11 @@ public sealed class IdentityStore
         }
 
         playerId = playerId.Trim();
+        if (AccountService.IsAccountPlayerId(playerId))
+        {
+            return null;
+        }
+
         if (playerId.Length is < 8 or > 64 || !playerId.All(IsSafeChar))
         {
             return null;
@@ -61,7 +69,7 @@ public sealed class IdentityStore
         var created = new Entry { Token = token, LastSeenUnix = NowUnix };
         if (!_entries.TryAdd(playerId, created))
         {
-            return Resolve(playerId, token);
+            return ResolveGuest(playerId, token);
         }
 
         return new Identity(playerId, token);

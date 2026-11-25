@@ -48,6 +48,7 @@ export default function App() {
         ) : room.phase === 'over' && !state.round ? (
           <ResultScreen
             room={room}
+            over={state.over}
             onRematch={() => void actions.rematch()}
             onLeave={() => void actions.leave()}
           />
@@ -65,6 +66,11 @@ export default function App() {
         <Lobby
           queued={state.queued}
           disabled={state.status !== 'online'}
+          account={state.account}
+          leaderboard={state.leaderboard}
+          onLogin={actions.login}
+          onRegister={actions.register}
+          onLogout={actions.logout}
           onCreate={() => void actions.createRoom()}
           onQuickMatch={() => void actions.quickMatch()}
           onPlayBot={() => void actions.playBot()}

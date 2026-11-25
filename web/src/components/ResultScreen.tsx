@@ -1,18 +1,21 @@
 import { WarMark } from './WarMark';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { useI18n } from '../i18n';
-import type { RoomState } from '../game/types';
+import type { MatchOver, RoomState } from '../game/types';
 
 interface ResultScreenProps {
   room: RoomState;
+  over?: MatchOver | null;
   onRematch: () => void;
   onLeave: () => void;
 }
 
-export function ResultScreen({ room, onRematch, onLeave }: ResultScreenProps) {
+export function ResultScreen({ room, over, onRematch, onLeave }: ResultScreenProps) {
   const { t } = useI18n();
   const won = room.winnerSeat === room.yourSeat;
   const canRematch = room.opponent.connected && !room.you.rematchVote;
+  const ratingDelta = over?.ratingDelta;
+  const newRating = over?.newRating;
 
   const reason = (() => {
     switch (room.endReason) {
@@ -33,6 +36,15 @@ export function ResultScreen({ room, onRematch, onLeave }: ResultScreenProps) {
       <p className="eyebrow">{won ? t('result.wonEyebrow') : t('result.lostEyebrow')}</p>
       <h1>{won ? t('result.victory') : t('result.defeat')}</h1>
       <p className="muted">{reason}</p>
+
+      {ratingDelta != null && newRating != null && (
+        <p className={`rating-change ${ratingDelta >= 0 ? 'gain' : 'loss'}`}>
+          {t('result.rating', {
+            delta: `${ratingDelta >= 0 ? '+' : ''}${ratingDelta}`,
+            rating: newRating,
+          })}
+        </p>
+      )}
 
       <div className="result-score">
         <div>

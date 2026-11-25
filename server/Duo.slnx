@@ -1,5 +1,6 @@
 <Solution>
   <Project Path="Duo.Api/Duo.Api.csproj" />
+  <Project Path="Duo.Api.Tests/Duo.Api.Tests.csproj" />
   <Project Path="Duo.Domain.Tests/Duo.Domain.Tests.csproj" />
   <Project Path="Duo.Domain/Duo.Domain.csproj" />
 </Solution>
