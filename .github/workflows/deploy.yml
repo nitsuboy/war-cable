@@ -34,6 +34,8 @@ jobs:
 
       - name: Build
         working-directory: ./web
+        env:
+          VITE_HUB_URL: ${{ secrets.VITE_HUB_URL }}
         run: npm run build
 
       - name: Upload artifact
