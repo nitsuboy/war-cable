@@ -9,6 +9,9 @@ export interface SeatView {
   connected: boolean;
   captures: number;
   rematchVote: boolean;
+  bot?: boolean;
+  username?: string | null;
+  rating?: number | null;
 }
 
 export interface OpponentView {
@@ -18,6 +21,9 @@ export interface OpponentView {
   connected: boolean;
   captures: number;
   rematchVote: boolean;
+  bot?: boolean;
+  username?: string | null;
+  rating?: number | null;
 }
 
 export interface RoomState {
@@ -34,6 +40,7 @@ export interface RoomState {
   opponent: OpponentView;
   winnerSeat: Seat | null;
   endReason: string | null;
+  rated?: boolean;
 }
 
 export interface RoundResult {
@@ -52,6 +59,33 @@ export interface RoundResult {
 export interface MatchOver {
   winner: 'you' | 'opponent';
   reason: string;
+  ratingDelta?: number | null;
+  newRating?: number | null;
+}
+
+export interface AccountView {
+  username: string;
+  rating: number;
+  games: number;
+  wins: number;
+  losses: number;
+  draws: number;
+}
+
+export interface AuthResult {
+  ok: boolean;
+  error: string | null;
+  playerId: string | null;
+  sessionToken: string | null;
+  account: AccountView | null;
+}
+
+export interface LeaderboardRow {
+  rank: number;
+  username: string;
+  rating: number;
+  games: number;
+  wins: number;
 }
 
 export interface JoinResult {
@@ -65,6 +99,7 @@ export interface JoinResult {
 export interface HelloResult {
   playerId: string;
   sessionToken: string;
+  account?: AccountView | null;
 }
 
 export interface Identity {

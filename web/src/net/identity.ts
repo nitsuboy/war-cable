@@ -32,3 +32,11 @@ export function saveIdentity(identity: Identity): void {
     // Private mode or blocked storage: the session still works until reload.
   }
 }
+
+export function clearIdentity(): void {
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // Storage unavailable: nothing to clear.
+  }
+}

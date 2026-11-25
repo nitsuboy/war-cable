@@ -29,6 +29,25 @@ export const pt: Record<TranslationKey, string> = {
   'lobby.offlineNotice':
     'O campo está inacessível. O jogo online fica desativado enquanto a conexão estiver fora.',
 
+  'auth.title': 'Conta',
+  'auth.guest': 'Jogando como visitante. Entre para disputar partidas ranqueadas.',
+  'auth.login': 'Entrar',
+  'auth.register': 'Criar conta',
+  'auth.username': 'Usuário',
+  'auth.password': 'Senha',
+  'auth.submitLogin': 'Entrar',
+  'auth.submitRegister': 'Criar conta',
+  'auth.working': 'Processando…',
+  'auth.logout': 'Sair',
+  'auth.hint': 'Usuário com 3–20 letras, números, _ ou -. Senha com pelo menos 8 caracteres.',
+  'auth.ratingLabel': 'Rating',
+  'auth.record': '{wins}V · {losses}D · {draws}E · {games} partidas',
+  'auth.rankedNote':
+    'Partidas rápidas entre duas contas são ranqueadas. Salas privadas, bots e visitantes ficam casuais.',
+
+  'leaderboard.title': 'Melhores duelistas',
+  'leaderboard.record': '{wins}/{games}',
+
   'rules.1': 'Os dois jogadores revelam uma carta ao mesmo tempo.',
   'rules.2': 'A carta mais alta vence — com três exceções.',
   'rules.3': 'X empata com qualquer carta.',
@@ -50,6 +69,7 @@ export const pt: Record<TranslationKey, string> = {
   'table.round': 'Rodada {round}',
   'table.leave': 'Sair',
   'table.botChip': 'Bot',
+  'table.rankedChip': 'Ranqueada',
   'table.opponent': 'Oponente',
   'table.you': 'Você',
   'table.cards': '{count} cartas',
@@ -92,6 +112,7 @@ export const pt: Record<TranslationKey, string> = {
   'result.rematch': 'Revanche',
   'result.opponentDisconnected': 'Oponente desconectado',
   'result.backToLobby': 'Voltar ao lobby',
+  'result.rating': 'Rating {delta} → {rating}',
 
   'language.label': 'Idioma',
   'toast.dismiss': 'Fechar',
@@ -109,5 +130,10 @@ export const pt: Record<TranslationKey, string> = {
   'errors.notOver': 'A partida ainda não terminou.',
   'errors.offlineAction': 'Você está offline. Reconectando…',
   'errors.botFailed': 'Não foi possível iniciar a partida contra o bot. Tente novamente.',
+  'errors.invalidUsername': 'O usuário deve ter 3–20 letras, números, _ ou -.',
+  'errors.weakPassword': 'A senha deve ter de 8 a 128 caracteres.',
+  'errors.usernameTaken': 'Esse nome de usuário já está em uso.',
+  'errors.invalidCredentials': 'Usuário ou senha incorretos.',
+  'errors.authRateLimited': 'Tentativas demais. Aguarde alguns minutos.',
   'errors.unknown': 'Algo deu errado. Tente novamente.',
 };

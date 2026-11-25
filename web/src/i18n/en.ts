@@ -27,6 +27,25 @@ export const en = {
   'lobby.offlineNotice':
     'The field is unreachable. Online play is disabled while the connection is down.',
 
+  'auth.title': 'Account',
+  'auth.guest': 'Playing as a guest. Sign in to play ranked matches.',
+  'auth.login': 'Sign in',
+  'auth.register': 'Create account',
+  'auth.username': 'Username',
+  'auth.password': 'Password',
+  'auth.submitLogin': 'Sign in',
+  'auth.submitRegister': 'Create account',
+  'auth.working': 'Working…',
+  'auth.logout': 'Sign out',
+  'auth.hint': 'Username 3–20 letters, digits, _ or -. Password at least 8 characters.',
+  'auth.ratingLabel': 'Rating',
+  'auth.record': '{wins}W · {losses}L · {draws}D · {games} played',
+  'auth.rankedNote':
+    'Quick matches between two accounts are ranked. Private rooms, bots and guests stay casual.',
+
+  'leaderboard.title': 'Top duellists',
+  'leaderboard.record': '{wins}/{games}',
+
   'rules.1': 'Both players reveal one card at the same time.',
   'rules.2': 'Highest card wins — with three twists.',
   'rules.3': 'X draws against everything.',
@@ -48,6 +67,7 @@ export const en = {
   'table.round': 'Round {round}',
   'table.leave': 'Leave',
   'table.botChip': 'Bot',
+  'table.rankedChip': 'Ranked',
   'table.opponent': 'Opponent',
   'table.you': 'You',
   'table.cards': '{count} cards',
@@ -90,6 +110,7 @@ export const en = {
   'result.rematch': 'Rematch',
   'result.opponentDisconnected': 'Opponent disconnected',
   'result.backToLobby': 'Back to lobby',
+  'result.rating': 'Rating {delta} → {rating}',
 
   'language.label': 'Language',
   'toast.dismiss': 'Dismiss',
@@ -107,6 +128,11 @@ export const en = {
   'errors.notOver': 'The match is not over yet.',
   'errors.offlineAction': 'You are offline. Reconnecting…',
   'errors.botFailed': 'Could not start the bot match. Please try again.',
+  'errors.invalidUsername': 'Username must be 3–20 letters, digits, underscores or dashes.',
+  'errors.weakPassword': 'Password must be 8–128 characters.',
+  'errors.usernameTaken': 'That username is already taken.',
+  'errors.invalidCredentials': 'Wrong username or password.',
+  'errors.authRateLimited': 'Too many sign-in attempts. Wait a few minutes.',
   'errors.unknown': 'Something went wrong. Please try again.',
 } as const;
 
