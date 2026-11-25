@@ -19,13 +19,25 @@ public sealed class Seat
 
     public required string Ip { get; init; }
 
+    /// <summary>Set for registered players; null for guests.</summary>
+    public string? AccountId { get; init; }
+
+    public string? Username { get; init; }
+
+    /// <summary>Server-driven seat. Bots never own a connection.</summary>
+    public bool IsBot { get; init; }
+
+    /// <summary>Snapshot used for display; refreshed when a ranked match ends.</summary>
+    public int? Rating { get; set; }
+
     public string? ConnectionId { get; set; }
 
     public bool RematchVote { get; set; }
 
     public long? DisconnectedAtUnix { get; set; }
 
-    public bool Connected => ConnectionId is not null;
+    /// <summary>Bots count as present so their rounds never pause.</summary>
+    public bool Connected => IsBot || ConnectionId is not null;
 }
 
 /// <summary>
@@ -61,6 +73,9 @@ public sealed class Room
 
     public long RoundDeadlineUnixMs { get; private set; }
 
+    /// <summary>When the bot seat should pick. Zero when the room has no bot.</summary>
+    public long BotPickAtUnixMs { get; private set; }
+
     public long RemainingMsAtPause { get; private set; }
 
     public bool Paused { get; private set; }
@@ -70,6 +85,12 @@ public sealed class Room
     public long LastActivityUnix { get; private set; }
 
     public string? EndReason { get; private set; }
+
+    /// <summary>True when both seats are registered and the room came from the quick-match queue.</summary>
+    public bool Ranked { get; private set; }
+
+    /// <summary>Guards the Elo write so a match can never be rated twice.</summary>
+    public bool ResultRecorded { get; private set; }
 
     public SemaphoreSlim Gate { get; } = new(1, 1);
 
@@ -87,6 +108,10 @@ public sealed class Room
 
     public bool IsFull => Guest is not null;
 
+    public bool HasBot => Host.IsBot || Guest is { IsBot: true };
+
+    public Seat? BotSeat => Host.IsBot ? Host : Guest is { IsBot: true } ? Guest : null;
+
     public static long NowMs => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
     public Seat? SeatOf(Player player) => player == Player.A ? Host : Guest;
@@ -100,6 +125,19 @@ public sealed class Room
     public Seat? OpponentOf(Seat seat) => Seats.FirstOrDefault(s => !ReferenceEquals(s, seat));
 
     public void Touch() => LastActivityUnix = NowMs;
+
+    public void MarkRanked() => Ranked = true;
+
+    public bool TryMarkResultRecorded()
+    {
+        if (ResultRecorded)
+        {
+            return false;
+        }
+
+        ResultRecorded = true;
+        return true;
+    }
 
     public void AddGuest(Seat guest)
     {
@@ -125,7 +163,9 @@ public sealed class Room
         Phase = GamePhase.Choosing;
         Paused = false;
         EndReason = null;
+        ResultRecorded = false;
         RoundDeadlineUnixMs = NowMs + _turnSeconds * 1000L;
+        BotPickAtUnixMs = HasBot ? NowMs + BotDelayMs(_turnSeconds) : 0;
         Touch();
     }
 
@@ -134,7 +174,18 @@ public sealed class Room
         RoundNumber++;
         Paused = false;
         RoundDeadlineUnixMs = NowMs + _turnSeconds * 1000L;
+        BotPickAtUnixMs = HasBot ? NowMs + BotDelayMs(_turnSeconds) : 0;
         Touch();
+    }
+
+    /// <summary>
+    /// Mirrors the old browser bot: about half the turn budget, jittered, so
+    /// the server bot feels like a person rather than an instant oracle.
+    /// </summary>
+    private static int BotDelayMs(int turnSeconds)
+    {
+        var budget = Math.Clamp(turnSeconds * 1000.0 * 0.45, 200, 1400);
+        return (int)(budget * (0.4 + Random.Shared.NextDouble() * 0.8));
     }
 
     public void PauseRound()

@@ -23,6 +23,11 @@ pnpm-debug.log*
 # ---------- Build & package output ----------
 artifacts/
 
+# ---------- Local server data ----------
+*.db
+*.db-wal
+*.db-shm
+
 # ---------- Local configuration & secrets ----------
 .env
 .env.*

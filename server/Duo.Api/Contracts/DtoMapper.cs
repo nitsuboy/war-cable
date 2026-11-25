@@ -21,7 +21,10 @@ public static class DtoMapper
             Picked: state.HasPicked(viewer),
             Connected: you?.Connected ?? false,
             Captures: state.Captures(viewer),
-            RematchVote: you?.RematchVote ?? false);
+            RematchVote: you?.RematchVote ?? false,
+            Username: you?.Username,
+            Rating: you?.Rating,
+            Bot: you?.IsBot ?? false);
 
         var opponentSeat = new OpponentViewDto(
             Seat: SeatName(viewer.Opponent()),
@@ -29,7 +32,10 @@ public static class DtoMapper
             Picked: state.HasPicked(viewer.Opponent()),
             Connected: opponent?.Connected ?? false,
             Captures: state.Captures(viewer.Opponent()),
-            RematchVote: opponent?.RematchVote ?? false);
+            RematchVote: opponent?.RematchVote ?? false,
+            Username: opponent?.Username,
+            Rating: opponent?.Rating,
+            Bot: opponent?.IsBot ?? false);
 
         return new RoomStateDto(
             Phase: PhaseName(room.Phase),
@@ -44,7 +50,8 @@ public static class DtoMapper
             You: yourSeat,
             Opponent: opponentSeat,
             WinnerSeat: state.Winner is { } winner ? SeatName(winner) : null,
-            EndReason: room.EndReason);
+            EndReason: room.EndReason,
+            Rated: room.Ranked);
     }
 
     public static RoundResultDto Round(RoundResult result, Player viewer)
